@@ -18,15 +18,33 @@ sh $SENCHA_BUILD_SCRIPT_NAME d
 cd $XCODE_PROJECT_PATH
 
 xcodebuild -scheme RetailMotus -archivePath $XCODE_ARCHIVE_PATH -destination generic/platform=iOS clean archive
+if [[ $? == 0 ]]; then
+	xcodebuild -exportArchive -exportFormat IPA -archivePath $XCODE_ARCHIVE_PATH.xcarchive -exportPath $RELEASE_PATH.ipa -exportProvisioningProfile "$PROVISIONING_PROFILE"
+	if [[ $? == 0 ]]; then
+		rm $XCODE_ARCHIVE_PATH.xcarchive
+		export ANDROID_HOME=$ANDROID_HOME 
 
-xcodebuild -exportArchive -exportFormat IPA -archivePath $XCODE_ARCHIVE_PATH.xcarchive -exportPath $RELEASE_PATH.ipa -exportProvisioningProfile \"$PROVISIONING_PROFILE\"
+		cd $ANDROID_PROJECT_PATH
 
-export ANDROID_HOME=$ANDROID_HOME 
-
-cd $ANDROID_PROJECT_PATH
-
-ant release
-
-jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore $ANDROID_KEYSTORE_LOCATION $ANDROID_UNSIGNED_APK_PATH $ANDROID_KEY_NAME
-
-zipalign -v 4 $ANDROID_UNSIGNED_APK_PATH $RELEASE_PATH.apk
+		ant release
+		if [[ $? == 0 ]]; then
+			jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore $ANDROID_KEYSTORE_LOCATION $ANDROID_UNSIGNED_APK_PATH $ANDROID_KEY_NAME
+			if [[ $? == 0 ]]; then
+				zipalign -v 4 $ANDROID_UNSIGNED_APK_PATH $RELEASE_PATH.apk
+				if [[ $? == 0 ]]; then
+					echo "Android build succeeded!	 APK location: $RELEASE_PATH"
+				else
+					echo "Android zipalign failed."
+				fi
+			else
+				echo "Android app signing failed."
+			fi
+		else
+			echo "Android build failed. Aborting build. iOS ipa should have succeeded"
+		fi
+	else
+		echo "Xcode ipa package failed. Aborting builds."
+	fi
+else
+	echo "Xcode archive failed. Aborting builds"
+fi
