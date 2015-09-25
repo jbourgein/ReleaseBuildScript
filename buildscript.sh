@@ -15,6 +15,7 @@ LOG_PATH=$(cd "$( dirname "${BASH_SOURCE[0]}" )" &&  pwd)/RM_build_$(date +%Y-%m
 
 echo "\nBuilding RetailMotus"
 echo "Log available here: $LOG_PATH\n"
+echo "For Android build problems see the readme on github here: https://github.com/jbourgein/ReleaseBuildScript"
 
 echo "\tRunning Sencha build script: $SENCHA_BUILD_SCRIPT_PATH$SENCHA_BUILD_SCRIPT_NAME"
 cd $SENCHA_BUILD_SCRIPT_PATH
